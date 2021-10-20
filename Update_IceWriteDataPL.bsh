@@ -1,0 +1,220 @@
+#!/bin/bash
+
+
+
+source ~/anaconda/etc/profile.d/conda.sh .
+
+conda activate puppies
+
+
+## Need to establish main directory and pass to other scripts here
+########################################
+## https://stackoverflow.com/questions/36365801/run-a-crontab-job-using-an-annaconda-env
+#######################################
+
+day=$(date -d "1 day ago" +%d)
+Mday=$(date -d "2 day ago" +%d)
+Mmonth=$(date -d "2 day ago" +%m)
+Myear=$(date -d "2 day ago" +%Y)
+month=$(date -d "1 day ago" +%m)
+year=$(date -d "1 day ago" +%Y)
+
+day=$(date +%d)
+Mday=$(date -d "1 day ago" +%d)
+month=$(date +%m)
+year=$(date +%Y)
+Mmonth=$(date -d "1 day ago" +%m)
+
+
+## If working on archive go here:
+#day=10
+#Mday=09
+#month=04
+#year=2019
+#echo $PWD
+#echo $ls
+
+
+#################  Run GOF things
+########################3
+# Set Env variables
+#########################
+
+#export PATH="/usr/include/cairo:$PATH"
+#export PATH="/usr/bin/wgrib:$PATH"
+#export wgrib=/usr/bin/wgrib
+#export GADDIR=/home/emily.niebuhr/grads-2.2.0/lib
+#export PATH="/home/emily.niebuhr/grads-2.2.0/bin:$PATH"
+#export GASCRP=/home/emily.niebuhr/grads-2.2.0/bin
+#export PATH="/home/emily.niebuhr/grads-2.2.0/lib:$PATH"
+#export PATH="/usr/include/cairo:$PATH"
+
+#export PATH="/usr/bin/wgrib:$PATH"
+
+#  This does not work somehow - doesnt call environment PYTHON="/home/emily.niebuhr/miniconda3/bin/python"
+PYTHON="python"
+# homedir=/home/amos/IceOperatePL
+SCRIPTDIR="/home/amos/IceOperatePL"
+
+#####################################
+# Please note that lats and lons are different for different models and for winter and summer
+## GOFS
+minLon=176
+maxLon=214
+minLat=53
+maxLat=72
+lonThet=195
+latThet=72
+
+############
+# GIOPS
+##########
+## GIOPS  Winter
+
+minGLon=-180
+maxGLon=-157
+minGLat=56
+maxGLat=73
+
+###### GIOPS Summer
+minGLon=-185
+maxGLon=-135
+minGLat=65
+maxGLat=80
+lonThet=195
+
+
+## RTOFS / RASM Summer
+EminLon=175
+EmaxLon=275
+EminLat=63
+EmaxLat=77
+ElonThet=205
+ElatThet=75
+
+
+minLon=176
+maxLon=214
+minLat=53
+maxLat=72
+lonThet=195
+latThet=72
+
+#SummerGOFS
+minLat=60
+maxlat=85
+minLon=175
+maxLon=235
+lonThet=195
+latThet=75
+
+
+#########################
+# Cropping for ASIP images
+###################
+
+## Winter
+RHup=175
+RHdown=350
+LHup=1050
+LHdown=1040
+
+#croppedIm = catDog.crop((175,380,875,940))
+RHup=175
+RHdown=350
+LHup=875
+LHdown=940
+
+
+
+echo "GOFS"
+echo $minLon
+echo $maxLon
+echo $minLon
+echo $maxLon
+echo $lonThet
+echo $latThet
+#################  Need to export or your bash will not work!! 
+
+
+  $PYTHON $SCRIPTDIR/GOFS_PlotPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+ 
+  $PYTHON $SCRIPTDIR/GOFS_PlotPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+
+  $PYTHON $SCRIPTDIR/GOFS_ThickPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+
+  $PYTHON $SCRIPTDIR/Update_GioRio2PlotPL.py $minGLon $maxGLon $minGLat $maxGLat 
+
+  $PYTHON $SCRIPTDIR/Update_giorioThick2PL.py $minGLon $maxGLon $minGLat $maxGLat
+
+
+  $PYTHON $SCRIPTDIR/Update_RASM_ESRL_PLOT.py $EminLon $EmaxLon $EminLat $EmaxLat $ElonThet $ElatThet
+  $PYTHON $SCRIPTDIR/Update_RASM_ThickPLOTPL.py $EminLon $EmaxLon $EminLat $EmaxLat $ElonThet $ElatThet
+
+
+  $PYTHON $SCRIPTDIR/Update_RTOFSPL.py $EminLon $EmaxLon $EminLat $EmaxLat $ElonThet $ElatThet
+  $PYTHON $SCRIPTDIR/Update_RTOFSthickPlotPL.py $EminLon $EmaxLon $EminLat $EmaxLat $ElonThet $ElatThet
+
+  $PYTHON $SCRIPTDIR/Update_Shape_dwnPL.py $RHup $RHdown $LHup $LHdown
+
+
+#  $PYTHON $SCRIPTDIR/WW3_ForIceDeskPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+
+  $PYTHON $SCRIPTDIR/Update_GFSForIceDeskPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+
+ # $PYTHON $SCRIPTDIR/GFS_SLP_ROCPL.py $minLon $maxLon $minLat $maxLat $lonThet $latThet
+
+###############################################################################
+############### The following code makes video Plots PL  
+
+cd ${SCRIPTDIR}/RASM-ESRL_4NIC_${year}-${Mmonth}-${Mday}/RASM-ESRL_${year}-${Mmonth}-${Mday}/
+
+
+convert -delay 185 -loop 0 GOFS_goDay1.png GOFS_goDay2.png GOFS_goDay3.png GOFS_goDay3.png GOFS_goDay4.png GOFS_goDay5.png GOFS_goDay5.png GOFS_goDay5.png  GOFS_goDay7.png GOFS_goDay7.png GOFS_goLoopPL.gif
+
+convert -delay 185 -loop 0 TH_GOFS_goDay1.png TH_GOFS_goDay2.png TH_GOFS_goDay3.png TH_GOFS_goDay3.png TH_GOFS_goDay4.png TH_GOFS_goDay5.png TH_GOFS_goDay5.png TH_GOFS_goDay5.png TH_GOFS_goLoopPL.gif
+
+
+convert -delay 185 -loop 0 plot_Day_GIOPS1.png plot_Day_GIOPS2.png plot_Day_GIOPS3.png plot_Day_GIOPS4.png plot_Day_GIOPS5.png plot_Day_GIOPS5.png  plot_Day_GIOPS5.png plot_Day_GIOPS7.png plot_Day_GIOPS7.png plot_Day10_GIOPS.png plot_Day10_GIOPS.png GIOPSV5.gif
+
+convert -delay 185 -loop 0 plotTH_Day_GIOPS1.png plotTH_Day_GIOPS2.png plotTH_Day_GIOPS3.png plotTH_Day_GIOPS4.png plotTH_Day_GIOPS5.png plotTH_Day_GIOPS5.png  plotTH_Day_GIOPS5.png TH_GIOPSV5.gif
+
+
+convert -delay 185 -loop 0 plotTH_Day1_ESRL.png plotTH_Day2_ESRL.png plotTH_Day3_ESRL.png plotTH_Day4_ESRL.png plotTH_Day5_ESRL.png plotTH_Day5_ESRL.png plotTH_Day5_ESRL.png plotTH_Day10_ESRL.png plotTH_Day10_ESRL.png TH_ESRL10.gif
+
+
+convert -delay 185 -loop 0 plot_Day1_ESRL.png plot_Day2_ESRL.png plot_Day3_ESRL.png plot_Day4_ESRL.png plot_Day5_ESRL.png plot_Day5_ESRL.png plot_Day5_ESRL.png plot_Day10_ESRL.png plot_Day10_ESRL.png ESRL10.gif 
+
+
+convert -delay 210 -loop 0 Winds_WW3_0.png Winds_WW3_12.png Winds_WW3_24.png Winds_WW3_36.png Winds_WW3_48.png Winds_WW3_60.png Winds_WW3_72.png Winds_WW3_84.png Winds_WW3_96.png Winds_WW3_108.png Winds_WW3_120.png WWW3_Winds.gif
+
+convert -delay 210 -loop 0 WW3_0.png WW3_12.png WW3_24.png WW3_36.png WW3_48.png WW3_60.png WW3_72.png WW3_84.png WW3_96.png WW3_108.png WW3_120.png WW3_Waves.gif
+
+convert -delay 210 -loop 0 RTOFS_f024.png RTOFS_f048.png RTOFS_f072.png RTOFS_f144.png RTOFS_Loop.gif
+
+convert -delay 210 -loop 0 RTOFS_thf024.png RTOFS_thf048.png RTOFS_thf072.png RTOFS_thf144.png RTOFS_thLoop.gif
+
+convert -delay 210 -loop 0 Syn_today.gif Syn_24.gif Syn_48.gif Syn_72.gif Syn_96.gif Syn_Loop.gif
+
+$PYTHON $SCRIPTDIR/Update_Sea_Ice_VidPPTPL.py
+
+
+
+d="Sea_Ice_Videos_"${month}"_"${day}"NWPS_Video_PPT.pptx"
+
+
+
+
+echo $d
+echo $d2
+
+########################################
+# Please note this is the code to send sea ice data over to the ASIP
+####################################
+#scp $d akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp ESRL10.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp TH_ESRL10.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp GIOPSV5.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp TH_GOFS_goLoopPL.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp GOFS_goLoopPL.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT
+#scp TH_GIOPSV5.gif akdata@ancsrv.anc.nwsar.gov:/data/seaice/PPT

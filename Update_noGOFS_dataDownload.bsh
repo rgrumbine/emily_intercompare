@@ -1,0 +1,210 @@
+#!/bin/bash
+
+
+#############################
+# To Run this script, all you need to do is make sure you have wget, wgrib2
+# Please note, if GOFS is failing, there is a chance there has been a change to the
+# Password. Please contact NRL for this. Password needs to be kept internally -
+# Please contact joe.metzger@nrlssc.navy.mil for permission for the password
+# The script untars the RASM file and unpacks everything and downloads it into
+# One directory
+# 
+
+### MAy not need this to source where python is - directing it to my favorite python
+source ~/anaconda/etc/profile.d/conda.sh .
+
+conda activate kitties
+#python-3.6
+
+
+## Take any extra files leftover from yesterday
+
+## adjust this accordingly if you need to conserve space on your computer
+#for f in $FILES; do mv "$f" "/home/emily.niebuhr/Downloads/IceWebTest/archive/"; done 
+
+
+### Set the dates for which sea ice to grab. Some data is available more frequently- other data you need to grab
+## from yesterday as it is not available until 5PM each day. 
+
+day=$(date -d "1 day ago" +%d)
+Mday=$(date -d "2 day ago" +%d)
+Mmonth=$(date -d "2 day ago" +%m)
+Myear=$(date -d "2 day ago" +%Y)
+month=$(date -d "1 day ago" +%m)
+year=$(date -d "1 day ago" +%Y)
+
+
+day=$(date +%d)
+Mday=$(date -d "1 day ago" +%d)
+Mmonth=$(date -d "1 day ago" +%m)
+month=$(date +%m)
+year=$(date +%Y)
+
+
+# Set your home directory
+homedir=/home/amos/IceOperatePL
+
+cd $homedir
+
+
+##################################################################
+# Start to download sea ice data. First start with ESRL
+# Then untar ESRL data and use this folder to place all other data in for downloads
+# No full reason to do this- just sort of fit early philosophy- could always set up directories 
+# Differently
+# Please note a lot of this data is experimental
+##############################################################
+
+wget ftp://ftp1.esrl.noaa.gov/RASM-ESRL/ModelOutput/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}.tar.gz
+
+
+
+#########################
+# Currently not running the if statement on home computer- but if set up elsewhere
+# Might be best to have an if statement to make sure something is open
+# The if statement is there in case ESRL data isn't there- and keeping the same directory structure
+# ESRL data is fairly reliable
+ 
+####################################### If statement does not work at home
+#if [ -e RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}.tar.gz ]
+#then
+
+gunzip RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}.tar.gz
+mkdir ${homedir}/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}/
+
+tar -xvf RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}.tar -C   ${homedir}/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}/
+cd ${homedir}/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}/RASM-ESRL_${Myear}-${Mmonth}-${Mday}
+
+echo Yes
+set GOFhere=0.
+
+#else
+#echo No
+
+   # mkdir -p ${homedir}/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}/RASM-ESRL_${Myear}-${Mmonth}-${Mday}/
+   # cd ${homedir}/RASM-ESRL_4NIC_${Myear}-${Mmonth}-${Mday}/RASM-ESRL_${Myear}-${Mmonth}-${Mday}
+
+#fi
+############ 
+# Define the word python for a script
+# Download wave GFS data
+##############
+
+PYTHON="python"
+SCRIPTDIR="/home/amos/IceOperatePL"
+
+$PYTHON $SCRIPTDIR/GFS_Wave_download.py
+
+
+#########################################
+# PLEASE NOTE- NRL generously provides us with their model data. Please do not share this password with anyone
+# Without email confirmation from Joe Metzger
+
+wget --user='Nwsak' --password='  ' --no-check-certificate https://www7320.nrlssc.navy.mil/nesm/GOFS_3.1/GOFS3.1_Arctic_${Myear}${Mmonth}${Mday}12.tar.gz
+gunzip GOFS3.1_Arctic_${Myear}${Mmonth}${Mday}12.tar.gz
+tar -xvf GOFS3.1_Arctic_${Myear}${Mmonth}${Mday}12.tar
+
+#####################################################################
+#Download NetCDF files from GIOPS:
+#  Note that Environmental Canada seems to adjust location of sea ice data every few years
+#https://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/024/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_2020120600_P024.nc
+#
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/003/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P003.nc -O GIO_IN.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/024/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P024.nc -O GIO001.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/048/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P048.nc -O GIO002.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/072/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P072.nc -O GIO003.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/096/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P096.nc -O GIO004.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/120/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P120.nc -O GIO5.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/144/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P144.nc -O GIO006.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/168/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P168.nc -O GIO7.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/192/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P192.nc -O GIO008.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/216/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P216.nc -O GIO009.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/240/CMC_giops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P240.nc -O GIO1010.nc
+
+
+################################################################################
+## Note- that unlike other model data, one must download giops files by parameter 
+## Downloading Thickness data here
+
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/003/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P003.nc -O GIO_INth.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/024/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P024.nc -O GIO001th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/048/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P048.nc -O GIO002th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/072/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P072.nc -O GIO003th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/096/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P096.nc -O GIO004th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/120/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P120.nc -O GIO5th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/144/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P144.nc -O GIO006th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/168/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P168.nc -O GIO7th.nc
+wget -c http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/192/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P192.nc -O GIO008th.nc
+wget http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/216/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P216.nc -O GIO009th.nc
+wget http://dd.weather.gc.ca/model_giops/netcdf/polar_stereographic/2d/00/240/CMC_giops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P240.nc -O GIO1010th.nc
+
+
+#Download NetCDF files from RIOPS:
+
+wget -c  http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/000/CMC_riops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P000.nc -O RIO_INITth.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/012/CMC_riops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P012.nc -O RIO12th.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/024/CMC_riops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P024.nc -O RIO24th.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/036/CMC_riops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P036.nc -O RIO36th.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/048/CMC_riops_iicevol_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P048.nc -O RIO48th.nc
+
+
+
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/000/CMC_riops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P000.nc -O RIO_INIT.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/012/CMC_riops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P012.nc -O RIO12.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/024/CMC_riops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P024.nc -O RIO24.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/036/CMC_riops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P036.nc -O RIO36.nc
+wget -c http://dd.alpha.weather.gc.ca/yopp/model_riops/netcdf/forecast/polar_stereographic/2d/${year}/${month}/${day}/00/048/CMC_riops_iiceconc_sfc_0_ps5km60N_3h-mean_${year}${month}${day}00_P048.nc -O RIO48.nc
+
+###############################
+# Downloading RTOFS data here
+#######################
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f024_arctic_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f048_arctic_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f072_arctic_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f144_arctic_std.grb2
+
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f024_bering_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f048_bering_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f072_bering_std.grb2
+wget ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/rtofs.${year}${month}${day}/rtofs_glo.t00z.f144_bering_std.grb2
+
+## Note that because RTOFS is huge, this is where we parse out the thickness and concentration using wgrib2.
+#  This is also easily done in gdal, but gdal is not on every noaa computer
+
+wgrib2 rtofs_glo.t00z.f024_arctic_std.grb2 -match 214: -grib rtofs_ARC_conc_f024_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f024_arctic_std.grb2 -match 213: -grib rtofs_ARC_thick_f024_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f048_arctic_std.grb2 -match 214: -grib rtofs_ARC_conc_f048_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f048_arctic_std.grb2 -match 213: -grib rtofs_ARC_thick_f048_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f072_arctic_std.grb2 -match 214: -grib rtofs_ARC_conc_f072_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f072_arctic_std.grb2 -match 213: -grib rtofs_ARC_thick_f072_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f144_arctic_std.grb2 -match 214: -grib rtofs_ARC_conc_f144_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f144_arctic_std.grb2 -match 213: -grib rtofs_ARC_thick_f144_${year}${month}${day}.grib2
+
+
+wgrib2 rtofs_glo.t00z.f024_bering_std.grb2 -match 214: -grib rtofs_BER_conc_f024_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f024_bering_std.grb2 -match 213: -grib rtofs_BER_thick_f024_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f048_bering_std.grb2 -match 214: -grib rtofs_BER_conc_f048_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f048_bering_std.grb2 -match 213: -grib rtofs_BER_thick_f048_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f072_bering_std.grb2 -match 214: -grib rtofs_BER_conc_f072_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f072_bering_std.grb2 -match 213: -grib rtofs_BER_thick_f072_${year}${month}${day}.grib2
+
+wgrib2 rtofs_glo.t00z.f144_bering_std.grb2 -match 214: -grib rtofs_BER_conc_f144_${year}${month}${day}.grib2
+wgrib2 rtofs_glo.t00z.f144_bering_std.grb2 -match 213: -grib rtofs_BER_thick_f144_${year}${month}${day}.grib2
+
+
+#############################################################
+# Not needed - but quick reference in case you want to 
+
+#for f in $FRIO; do convert -alpha off -background white -density 300 -trim  $f RIOV"$((i++))".png; done
+
+## how to loop through cropped images  https://stackoverflow.com/questions/3362920/get-just-the-filename-from-a-path-in-a-bash-script/3362952
+
+####convert -alpha offRIOPS_Ice_Conc10Z06Jul.png RIOPS2_Ice_Conc10Z06Jul.png
+
+##### convert -delay 120 -loop 0 *GIOPS_Ice* GIOPS_Animated.gif
+
